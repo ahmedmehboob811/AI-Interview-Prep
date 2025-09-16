@@ -95,10 +95,8 @@ const Dashboard = () => {
             })}
           </div>
         )}
-        <SummaryCard/>
-        
 
-        {/* Floating Add Button */}
+        {/* Floating Add Button */} 
         <button
           className="h-12 flex items-center justify-center gap-3 bg-gradient-to-r from-[#FF9324] to-[#e99a4b] text-sm font-semibold text-white px-7 py-2.5 rounded-full hover:bg-black hover:text-white transition-colors cursor-pointer hover:shadow-2xl hover:shadow-orange-300 fixed bottom-10 md:bottom-20 right-10 md:right-20"
           onClick={() => setOpenCreateModel(true)}

@@ -29,7 +29,7 @@ const SummaryCard = ({
             <span className="font-semibold">Experience:</span> {experience} yrs
           </p>
           <p className="text-sm">
-            <span className="font-semibold">Questions:</span> {questions}
+            <span className="font-semibold">Questions:</span> {Array.isArray(questions) ? questions.length : questions}
           </p>
           <p className="text-sm text-gray-700 mt-2">{description}</p>
         </div>
