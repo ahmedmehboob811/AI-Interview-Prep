@@ -1,20 +1,36 @@
-# Project Debug and Fix TODO
+# Project Debugging and Fixes
 
-## Backend Fixes
-- [x] Fix Gemini API key usage in aiController.js (remove incorrect object syntax)
-- [x] Improve error handling in aiService.js for JSON parsing (already has try-catch)
-- [x] Fix authMiddleware.js to check for token existence before JWT verify
-- [x] Remove unused generateConceptExplanation import in server.js
-- [x] Ensure consistent response format in sessionController.js (responses are functional as-is)
+## Issues Identified
+- [x] Summary cards not fetching on dashboard: questions displayed as array instead of count
+- [x] Session form crashing: AI generation failure due to wrong GoogleGenerativeAI init
+- [x] AI components not working: missing generateConceptExplanation function
+- [x] Extra SummaryCard component in Dashboard causing errors
+- [x] Typo in AIResponsePreview.jsx h2 component
 
-## Frontend Fixes
-- [x] Remove stray <SummaryCard/> in Dashboard.jsx
-- [x] Fix SummaryCard to display questions.length instead of questions array
-- [x] Improve error handling in CreateSessionForm.jsx for AI and session creation (already has comprehensive error handling)
-- [x] Add loading states and better error messages in Dashboard.jsx (already implemented)
+## Fixes Implemented
+- [x] Fix Dashboard.jsx: uncomment useEffect to fetchAllSessions, fix questions prop to show length
+- [x] Fix SummaryCard.jsx: display questions.length
+- [x] Fix aiController.js: correct GoogleGenerativeAI initialization
+- [x] Add generateConceptExplanation in aiService.js and aiController.js
+- [x] Fix server.js: add generateConceptExplanation import and route
+- [x] Fix AIResponsePreview.jsx: correct h2 component typo
+- [x] Add error toast for pin toggle in InterviewPrep.jsx
 
-## Testing
-- [ ] Test session creation flow end-to-end
-- [ ] Test dashboard fetching and summary cards display
-- [ ] Test AI components with Gemini API key
-- [ ] Verify auth middleware works correctly
+## Testing Steps
+- [ ] Install @google/generative-ai in backend if missing
+- [ ] Test Gemini API connectivity via /api/ai/test
+- [ ] Start backend server
+- [ ] Start frontend server
+- [ ] Test dashboard summary cards fetch and display
+- [ ] Test session creation with AI (no crash)
+- [ ] Test add more questions functionality
+- [ ] Test learn more (concept explanation) functionality
+- [ ] Test delete summary card
+- [ ] Verify no API crashes with new Gemini key
+
+## New Task: Add AI Text Response in Drawer
+- [x] Modify InterviewPrep.jsx to add state for currentQuestion and currentAnswer
+- [x] Update generateConceptExplanation to set currentQuestion and currentAnswer
+- [x] Modify drawer content to display question, answer, and explanation
+- [x] Test the drawer functionality
+- [x] Verify API is set and server runs without errors

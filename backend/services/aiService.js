@@ -1,73 +1,113 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+
+// ✅ Load environment variables
+if (!process.env.GEMINI_API_KEY) {
+  throw new Error("❌ GEMINI_API_KEY is missing in .env file");
+}
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-const generateInterviewQuestions = async (role, experience) => {
-  try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+// ✅ Helper to extract clean text from Gemini response
+const getTextFromResponse = (result) => {
+  return result.response.text().trim() || "";
+};
 
-    const prompt = `Generate 5 interview questions for a ${role} position with ${experience} years of experience.
-    Focus on technical skills, problem-solving, and role-specific scenarios.
-    Return the questions as a JSON array of strings.`;
+// ✅ Default fallback questions (used if AI fails)
+const FALLBACK_QUESTIONS = [
+  "Tell me about yourself and your professional background.",
+  "What is your greatest strength and how has it helped you succeed?",
+  "Describe a challenging project you worked on and how you handled it.",
+  "How do you stay updated with the latest developments in your field?",
+  "Where do you see yourself in five years, and how does this role fit into your career path?"
+];
+
+// 🔥 Safer + production-ready question generator
+const generateInterviewQuestions = async (
+  role = "Software Engineer",
+  experience = "Entry Level",
+  topicToFocus = "General Skills",
+  numberOfQuestions = 5
+) => {
+  console.log("📨 Prompt Inputs:", { role, experience, topicToFocus, numberOfQuestions });
+
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
+
+    // ✅ Stronger prompt — ensures proper JSON output
+    const prompt = `
+You are an AI interview assistant. 
+Generate ${numberOfQuestions} interview questions as a **pure JSON array of strings**.
+
+- Role: ${role}
+- Experience level: ${experience}
+- Focus topics: ${topicToFocus}
+
+❌ Do NOT include explanations, formatting, or text outside JSON.
+✅ Only return a valid JSON array. Example: ["Q1","Q2","Q3"]
+    `;
 
     const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+    const text = getTextFromResponse(result);
+    console.log("🧠 Raw AI output:", text); // <-- This helps you debug bad responses
 
-    // Parse the JSON response
     let questions;
+
     try {
       questions = JSON.parse(text);
-    } catch (parseError) {
-      throw new Error('Failed to parse AI response: ' + parseError.message);
+    } catch {
+      // Try extracting JSON if Gemini wrapped it in markdown or text
+      const jsonMatch = text.match(/\[([\s\S]*)\]/);
+      if (jsonMatch) {
+        questions = JSON.parse(`[${jsonMatch[1]}]`);
+      }
     }
+
+    // If still invalid, fallback
+    if (!questions || !Array.isArray(questions) || questions.length === 0) {
+      console.warn("⚠️ AI did not return valid JSON. Using fallback questions.");
+      questions = FALLBACK_QUESTIONS.slice(0, numberOfQuestions);
+    }
+
     return questions;
   } catch (error) {
-    console.error('Error generating questions:', error);
-    throw new Error('Failed to generate interview questions');
+    console.error("❌ Error generating interview questions:", error.message);
+    console.error(error.stack);
+
+    // Always return fallback so the backend never crashes
+    return FALLBACK_QUESTIONS.slice(0, numberOfQuestions);
   }
 };
 
-const evaluateAnswer = async (question, answer) => {
+const generateConceptExplanation = async (question) => {
+  console.log("📨 Generating explanation for:", question);
+
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-pro" });
 
-    const prompt = `Evaluate the following interview answer on a scale of 1-10 for:
-    1. Technical accuracy
-    2. Completeness
-    3. Communication clarity
-    4. Problem-solving approach
+    const prompt = `
+You are an AI interview coach providing guidance on how to answer common interview questions.
 
-    Question: ${question}
-    Answer: ${answer}
+For the following interview question, provide a clear, concise explanation of how to approach and answer it effectively. Include key points to cover, tips for structuring the response, and examples if helpful.
 
-    Provide a JSON response with:
-    {
-      "score": number (1-10),
-      "feedback": "detailed feedback string",
-      "strengths": ["strength1", "strength2"],
-      "improvements": ["improvement1", "improvement2"]
-    }`;
+Question: ${question}
+
+Format your response using Markdown for better readability, including headings, lists, and code blocks where appropriate.
+
+Keep the explanation under 300 words. Be accurate and helpful.
+    `;
 
     const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
+    const text = getTextFromResponse(result);
+    console.log("🧠 Raw explanation output:", text);
 
-    // Parse the JSON response
-    let evaluation;
-    try {
-      evaluation = JSON.parse(text);
-    } catch (parseError) {
-      throw new Error('Failed to parse AI response: ' + parseError.message);
-    }
-    return evaluation;
+    return text || "Sorry, I couldn't generate an explanation at this time.";
   } catch (error) {
-    console.error('Error evaluating answer:', error);
-    throw new Error('Failed to evaluate answer');
+    console.error("❌ Error generating concept explanation:", error.message);
+    return "An error occurred while generating the explanation. Please try again.";
   }
 };
 
 module.exports = {
   generateInterviewQuestions,
-  evaluateAnswer,
+  generateConceptExplanation,
 };

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 
-const Modal = ({ children, isOpen, onClose, hideHeader, title }) => {
+const Modal = ({ children, isOpen, onClose, hideHeader, title, actionLabel, onAction, loading }) => {
   const modalRef = useRef(null);
 
   // Close on Escape key
@@ -65,6 +65,25 @@ const Modal = ({ children, isOpen, onClose, hideHeader, title }) => {
         <div className="flex-1 overflow-y-auto custom-scrollbar p-4">
           {children}
         </div>
+        {actionLabel && (
+          <div className="flex items-center justify-end gap-3 p-4 border-t border-gray-200">
+            <button
+              type="button"
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              onClick={onClose}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 disabled:opacity-50"
+              onClick={onAction}
+              disabled={loading}
+            >
+              {loading ? "Deleting..." : actionLabel}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );

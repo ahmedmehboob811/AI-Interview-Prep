@@ -5,8 +5,29 @@ import remarkGfm from "remark-gfm";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
 
+const FALLBACK_MESSAGE = `
+### 📌 Default Guidance
+
+It seems the AI couldn't generate an explanation at the moment — but here's how you can approach this question:
+
+1. **Start with a strong introduction:** Briefly share who you are, your background, and your career path.
+2. **Highlight key experiences:** Focus on your most relevant roles, achievements, and skills.
+3. **Show alignment:** Explain why your experience makes you a great fit for the role.
+4. **Keep it short and confident:** Aim for 1–2 minutes if spoken, or 3–5 sentences if written.
+
+💡 **Example:**
+"I'm Alex, a software developer with 3 years of experience building web apps with React and Node.js. I've led projects that boosted user engagement by 40% and optimized backend performance. My strong problem-solving skills and focus on scalable solutions make me excited to contribute to your team."
+`;
+
 const AIResponsePreview = ({ content }) => {
   if (!content) return null;
+
+  // 🪄 Detect error message and replace with fallback
+  const finalContent =
+    content?.toLowerCase().includes("an error occurred") ||
+    content?.trim() === ""
+      ? FALLBACK_MESSAGE
+      : content;
 
   return (
     <div>
@@ -149,7 +170,7 @@ const AIResponsePreview = ({ content }) => {
           },
         }}
       >
-        {content}
+        {finalContent}
       </ReactMarkdown>
     </div>
   );

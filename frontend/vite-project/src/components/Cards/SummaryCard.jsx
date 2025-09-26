@@ -13,7 +13,8 @@ const SummaryCard = ({
 }) => {
   return (
     <div
-      className={`p-4 rounded-2xl shadow-md hover:shadow-xl transition cursor-pointer ${colors}`}
+      className="p-4 rounded-2xl shadow-md hover:shadow-xl transition cursor-pointer"
+      style={{ background: colors }}
       onClick={onSelect}
     >
       <div className="flex flex-col h-full justify-between">

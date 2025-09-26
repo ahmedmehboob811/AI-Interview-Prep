@@ -10,8 +10,8 @@ const DashboardLayout = ({ children }) => {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
-        <p className="text-gray-600 text-lg">Loading...</p>
-      </div>
+      <p className="text-gray-600 text-lg">Loading...</p>
+    </div>
     );
   }
 

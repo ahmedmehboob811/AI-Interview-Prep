@@ -1,151 +1,113 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import Input from "../../components/Inputs/Input";
-import { API_PATHS } from "../../utils/apiPaths";
 import axiosInstance from "../../utils/axiosInstance";
+import { API_PATHS } from "../../utils/apiPaths";
 import SpinnerLoader from "../../components/Loader/SpinnerLoader";
 import toast from "react-hot-toast";
 
 const CreateSessionForm = ({ onSessionCreated }) => {
-  const [formData, setFormData] = useState({
-    role: "",
-    experience: "",
-    topicToFocus: "",
-    description: "",
-  });
-  const [isLoading, setIsLoading] = useState(false);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [role, setRole] = useState("");
+  const [experience, setExperience] = useState("Entry Level");
+  const [topicToFocus, setTopicToFocus] = useState("");
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-
-  const navigate = useNavigate();
-
-  const handleChange = (key, value) => {
-    setFormData((prev) => ({
-      ...prev,
-      [key]: value,
-    }));
-  };
 
   const handleCreateSession = async (e) => {
     e.preventDefault();
-    const { role, experience, topicToFocus, description } = formData;
-
-    if (!role || !experience || !topicToFocus) {
-      setError("⚠️ Please fill all the required fields.");
-      return;
-    }
-
+    setLoading(true);
     setError("");
-    setIsLoading(true);
 
     try {
-      // 1️⃣ Ask backend AI for questions
-      const aiResponse = await axiosInstance.post(
-        API_PATHS.AI.GENERATE_QUESTION,
-        {
-          role,
-          experience: Number(experience),
-          topicToFocus,
-          numberOfQuestions: 10,
-        }
-      );
+      const res = await axiosInstance.post(API_PATHS.SESSION.CREATE, {
+        title,
+        description,
+        role,
+        experience,
+        topicToFocus,
+      });
 
-      const generatedQuestions = aiResponse.data?.questions || [];
-      if (!Array.isArray(generatedQuestions) || generatedQuestions.length === 0) {
-        throw new Error("AI did not return valid questions.");
+      if (res.data.success) {
+        toast.success("✅ Session created successfully!");
+        onSessionCreated?.(res.data.session);
+
+        // Reset form
+        setTitle("");
+        setDescription("");
+        setRole("");
+        setTopicToFocus("");
+      } else {
+        throw new Error(res.data.message || "Something went wrong");
       }
-
-      // 2️⃣ Create the session in DB
-      const sessionResponse = await axiosInstance.post(
-        API_PATHS.SESSION.CREATE,
-        {
-          role,
-          experience: Number(experience),
-          topicToFocus,
-          description,
-          questions: generatedQuestions,
-        }
-      );
-
-      const session = sessionResponse.data?.session;
-      if (!session?._id) {
-        throw new Error("Backend did not return session ID.");
-      }
-
-      toast.success("✅ Session created successfully!");
-      if (onSessionCreated) onSessionCreated(session);
-
-      // Navigate to the new session page
-      navigate(`/interview-prep/${session._id}`);
     } catch (err) {
       console.error("❌ Error creating session:", err);
-      const msg =
-        err.response?.data?.message ||
-        err.message ||
-        "Something went wrong. Please try again.";
+      const msg = err.response?.data?.message || "Failed to create session.";
       setError(msg);
       toast.error(msg);
     } finally {
-      setIsLoading(false);
+      setLoading(false);
     }
   };
 
   return (
-    <div className="w-[90vw] md:w-[35vw] p-7 flex flex-col justify-center">
-      <h3 className="text-lg font-semibold text-black">
-        Start a New Interview Journey
-      </h3>
-      <p className="text-xs text-slate-700 mt-[5px] mb-3">
-        Fill out a few quick details and unlock your personalized set of
-        interview questions!
-      </p>
+    <form
+      onSubmit={handleCreateSession}
+      className="p-6 bg-white shadow-md rounded-lg space-y-4 w-full max-w-lg mx-auto"
+    >
+      <h2 className="text-xl font-semibold text-gray-800">Create Interview Session</h2>
 
-      <form onSubmit={handleCreateSession} className="flex flex-col gap-3">
-        <Input
-          value={formData.role}
-          onChange={({ target }) => handleChange("role", target.value)}
-          label="Target Role"
-          placeholder="e.g., Frontend Developer, UI/UX Designer"
-          type="text"
-        />
+      {error && <p className="text-red-500 text-sm">{error}</p>}
 
-        <Input
-          value={formData.experience}
-          onChange={({ target }) => handleChange("experience", target.value)}
-          label="Years of Experience"
-          placeholder="e.g., 1, 3, 5+"
-          type="number"
-        />
+      <input
+        type="text"
+        placeholder="Session Title"
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        className="w-full border p-2 rounded"
+      />
 
-        <Input
-          value={formData.topicToFocus}
-          onChange={({ target }) =>
-            handleChange("topicToFocus", target.value)
-          }
-          label="Topics to Focus On"
-          placeholder="Comma-separated, e.g., React, Node.js, MongoDB"
-          type="text"
-        />
+      <input
+        type="text"
+        placeholder="Role (e.g. Frontend Developer)"
+        value={role}
+        onChange={(e) => setRole(e.target.value)}
+        className="w-full border p-2 rounded"
+        required
+      />
 
-        <Input
-          value={formData.description}
-          onChange={({ target }) => handleChange("description", target.value)}
-          label="Description"
-          placeholder="Any specific goals or notes for this session"
-          type="text"
-        />
+      <select
+        value={experience}
+        onChange={(e) => setExperience(e.target.value)}
+        className="w-full border p-2 rounded"
+      >
+        <option value="Entry Level">Entry Level</option>
+        <option value="Mid Level">Mid Level</option>
+        <option value="Senior">Senior</option>
+      </select>
 
-        {error && <p className="text-red-500 text-xs pb-2.5">{error}</p>}
+      <input
+        type="text"
+        placeholder="Topic to Focus (e.g. React, Data Structures)"
+        value={topicToFocus}
+        onChange={(e) => setTopicToFocus(e.target.value)}
+        className="w-full border p-2 rounded"
+      />
 
-        <button
-          type="submit"
-          className="bg-blue-500 text-white py-2 px-4 rounded mt-2 w-full hover:bg-blue-600 disabled:opacity-70 flex items-center justify-center gap-2"
-          disabled={isLoading}
-        >
-          {isLoading && <SpinnerLoader />}
-          {!isLoading && "Create Session"}
-        </button>
-      </form>
-    </div>
+      <textarea
+        placeholder="Description (optional)"
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+        className="w-full border p-2 rounded"
+      />
+
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition"
+      >
+        {loading ? <SpinnerLoader /> : "Create Session"}
+      </button>
+    </form>
   );
 };
 

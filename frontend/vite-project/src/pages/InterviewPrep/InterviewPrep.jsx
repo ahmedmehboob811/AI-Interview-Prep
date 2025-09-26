@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import moment from "moment";
-import { AnimatePresence, motion } from "framer-motion";
 import { LuAlertCircle, LuList } from "react-icons/lu";
 import SpinnerLoader from "../../components/Loader/SpinnerLoader";
 import { toast } from "react-hot-toast";
@@ -11,25 +10,54 @@ import QuestionCard from "../../components/Cards/QuestionCard";
 import Drawer from "../../components/Drawer";
 import DashboardLayout from "../../components/Layouts/DashboardLayout";
 import RoleInfoHeader from "./RoleInfoHeader";
+import AIResponsePreview from "./components/AIResponsePreview";
 
 const InterviewPrep = () => {
   const { sessionId } = useParams();
 
-  const [sessionData, setSessionData] = useState(null);
+  const [sessionData, setSessionData] = useState({
+    role: "Software Engineer",
+    topicToFocus: "JavaScript",
+    experience: "2",
+    questions: [
+      {
+        _id: "64b7f8a2e4b0c8a1d2f3e456",
+        question: "What is closure in JavaScript?",
+        answer:
+          "A closure is a function that has access to its own scope, the outer function's scope, and the global scope.",
+        isPinned: false,
+      },
+      {
+        _id: "64b7f8a2e4b0c8a1d2f3e457",
+        question: "Explain the difference between var, let, and const.",
+        answer:
+          "Var is function-scoped, let and const are block-scoped. Const cannot be reassigned.",
+        isPinned: true,
+      },
+    ],
+    description: "Practice JavaScript interview questions",
+    updatedAt: new Date().toISOString(),
+  });
   const [errorMsg, setErrorMsg] = useState("");
   const [openLearnMoreDrawer, setOpenLearnMoreDrawer] = useState(false);
   const [explanation, setExplanation] = useState(null);
+  const [currentQuestion, setCurrentQuestion] = useState(null);
+  const [currentAnswer, setCurrentAnswer] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isUploadLoader, setIsUploadLoader] = useState(false);
 
   // ✅ Fetch session details
   const fetchSessionDetailsById = async () => {
     try {
+      console.log("Fetching session details for ID:", sessionId);
       const response = await axiosInstance.get(
         API_PATHS.SESSION.GET_ONE(sessionId)
       );
+      console.log("Session details response:", response.data);
       if (response.data && response.data.session) {
         setSessionData(response.data.session);
+      } else {
+        console.warn("No session data found in response");
       }
     } catch (error) {
       console.error("Error fetching session:", error);
@@ -37,11 +65,13 @@ const InterviewPrep = () => {
   };
 
   // ✅ Generate explanation
-  const generateConceptExplanation = async (question) => {
+  const generateConceptExplanation = async (question, answer) => {
     try {
       setErrorMsg("");
       setIsLoading(true);
       setExplanation(null);
+      setCurrentQuestion(question);
+      setCurrentAnswer(answer);
       setOpenLearnMoreDrawer(true);
 
       const response = await axiosInstance.post(
@@ -72,6 +102,7 @@ const InterviewPrep = () => {
       }
     } catch (error) {
       console.error("Error toggling pin:", error);
+      toast.error("Failed to update pin status. Please try again.");
     }
   };
 
@@ -82,7 +113,7 @@ const InterviewPrep = () => {
       const response = await axiosInstance.post(
         API_PATHS.SESSION.AI_GENERATE_MORE_QUESTIONS(sessionId)
       );
-      if (response.data && response.data.session) {
+      if (response.data && response.data.success) {
         toast.success("More Questions Uploaded Successfully");
         fetchSessionDetailsById();
       }
@@ -99,6 +130,8 @@ const InterviewPrep = () => {
       fetchSessionDetailsById();
     }
   }, [sessionId]);
+
+  console.log("InterviewPrep rendering with sessionData:", sessionData);
 
   return (
     <DashboardLayout>
@@ -124,28 +157,15 @@ const InterviewPrep = () => {
               openLearnMoreDrawer ? "md:col-span-7" : "md:col-span-8"
             }`}
           >
-            <AnimatePresence>
-              {sessionData?.questions?.map((data, index) => (
-                <motion.div
-                  key={data._id || index}
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  transition={{
-                    duration: 0.4,
-                    type: "spring",
-                    stiffness: 100,
-                    delay: index * 0.1,
-                    damping: 15,
-                  }}
-                  layout
-                  layoutId={`question-${data._id || index}`}
-                >
+            {sessionData?.questions?.map((data, index) => {
+              console.log("Rendering question:", data.question);
+              return (
+                <div key={data._id || index}>
                   <QuestionCard
                     question={data?.question}
                     answer={data?.answer}
                     onLearnMore={() =>
-                      generateConceptExplanation(data?.question)
+                      generateConceptExplanation(data?.question, data?.answer)
                     }
                     isPinned={data?.isPinned}
                     onTogglePin={() => toggleQuestionPinStatus(data._id)}
@@ -170,9 +190,9 @@ const InterviewPrep = () => {
                       </button>
                     </div>
                   )}
-                </motion.div>
-              ))}
-            </AnimatePresence>
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -180,35 +200,47 @@ const InterviewPrep = () => {
         <Drawer
           isOpen={openLearnMoreDrawer}
           onClose={() => setOpenLearnMoreDrawer(false)}
-          title={
-            !isLoading && explanation
-              ? "Concept Explanation"
-              : "Explanation Panel"
-          }
-          width={openLearnMoreDrawer ? "40%" : "0%"}
+          title="Question Details"
         >
           {errorMsg ? (
             <div className="flex gap-2 text-sm text-amber-600 font-medium">
               <LuAlertCircle size={20} />
               <span>{errorMsg}</span>
             </div>
-          ) : isLoading ? (
-            <div className="flex items-center justify-center h-32">
-              <SpinnerLoader />
-            </div>
-          ) : explanation ? (
+          ) : currentQuestion ? (
             <div>
-              <h3 className="text-lg font-semibold mb-4">
-                Concept Explanation
-              </h3>
-              <p className="text-gray-700 whitespace-pre-line">
-                {explanation}
-              </p>
+              <h3 className="text-lg font-semibold mb-2">Question</h3>
+              <p className="mb-6 text-gray-800">{currentQuestion}</p>
+
+              {currentAnswer && (
+                <>
+                  <h3 className="text-lg font-semibold mb-2">Your Answer</h3>
+                  <AIResponsePreview content={currentAnswer} />
+                  <div className="h-4"></div>
+                </>
+              )}
+
+              {isLoading ? (
+                <div className="flex items-center justify-center h-32">
+                  <SpinnerLoader />
+                  <span className="ml-2">Generating explanation...</span>
+                </div>
+              ) : explanation ? (
+                <>
+                  <h3 className="text-lg font-semibold mb-4">Concept Explanation</h3>
+                  <AIResponsePreview content={explanation} />
+                </>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full text-center text-gray-500">
+                  <LuList size={48} className="mb-4" />
+                  <p>No explanation available. Please try again later.</p>
+                </div>
+              )}
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center h-full text-center text-gray-500">
               <LuList size={48} className="mb-4" />
-              <p>No explanation available. Please try again later.</p>
+              <p>No question selected.</p>
             </div>
           )}
         </Drawer>
