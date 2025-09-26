@@ -32,9 +32,7 @@ const App = () => {
           position="top-right"
           toastOptions={{
             duration: 3000,
-            style: {
-              fontSize: "13px",
-            },
+            style: { fontSize: "13px" },
           }}
         />
       </Router>
