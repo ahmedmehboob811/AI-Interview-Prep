@@ -9,35 +9,22 @@ import SignUp from "./pages/Auth/SignUp";
 import Dashboard from "./pages/Home/Dashboard";
 import InterviewPrep from "./pages/InterviewPrep/InterviewPrep";
 
-const App = () => {
-  return (
-    <UserProvider>
-      <Router>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<LandingPage />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<SignUp />} />
-
-          {/* Protected Routes */}
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route
-            path="/interview-prep/:sessionId"
-            element={<InterviewPrep />}
-          />
-        </Routes>
-
-        {/* Toast Notifications */}
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            duration: 3000,
-            style: { fontSize: "13px" },
-          }}
-        />
-      </Router>
-    </UserProvider>
-  );
-};
+const App = () => (
+  <UserProvider>
+    <Router>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<SignUp />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/interview-prep/:sessionId" element={<InterviewPrep />} />
+      </Routes>
+      <Toaster
+        position="top-right"
+        toastOptions={{ duration: 3000, style: { fontSize: "13px" } }}
+      />
+    </Router>
+  </UserProvider>
+);
 
 export default App;

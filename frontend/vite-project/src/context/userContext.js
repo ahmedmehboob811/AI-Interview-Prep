@@ -12,12 +12,10 @@ export const UserProvider = ({ children }) => {
     const token = localStorage.getItem('token');
     if (token) {
       axiosInstance.get(API_PATHS.AUTH.GET_PROFILE)
-        .then((response) => setUser(response.data.user))
+        .then((res) => setUser(res.data.user))
         .catch(() => localStorage.removeItem('token'))
         .finally(() => setLoading(false));
-    } else {
-      setLoading(false);
-    }
+    } else setLoading(false);
   }, []);
 
   const login = (token, userData) => {
