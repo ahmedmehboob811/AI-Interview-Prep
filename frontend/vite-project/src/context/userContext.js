@@ -1,5 +1,4 @@
-import { createContext } from 'react';
-import { useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect } from 'react';
 import axiosInstance from '../utils/axiosInstance';
 import { API_PATHS } from '../utils/apiPaths';
 
@@ -12,7 +11,6 @@ export const UserProvider = ({ children }) => {
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
-      // Verify token and get user data
       axiosInstance.get(API_PATHS.AUTH.GET_PROFILE)
         .then((response) => {
           setUser(response.data.user);
@@ -20,9 +18,7 @@ export const UserProvider = ({ children }) => {
         .catch(() => {
           localStorage.removeItem('token');
         })
-        .finally(() => {
-          setLoading(false);
-        });
+        .finally(() => setLoading(false));
     } else {
       setLoading(false);
     }
