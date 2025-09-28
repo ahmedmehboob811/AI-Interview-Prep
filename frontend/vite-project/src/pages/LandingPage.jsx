@@ -6,7 +6,7 @@ import { FiChevronDown } from "react-icons/fi";
 import SignUp from "./Auth/SignUp";
 import Login from "./Auth/Login";
 import Modal from "../components/Modal";
-import { UserContext } from "../context/userContext";
+import { UserContext } from "../context/UserContext";
 
 const LandingPage = () => {
   const navigate = useNavigate();
