@@ -20,7 +20,7 @@ const {
 const app = express();
 
 // ✅ 4. Middlewares
-app.use(cors({{  origin: ["http://localhost:5173", "https://your-frontend-domain.vercel.app"], // add your deployed frontend domain too
+app.use(cors({{  origin: ["http://localhost:5173", "https://ai-interview-prep-rgyg.vercel.app/"], // add your deployed frontend domain too
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true}}));
 app.use(express.json());
