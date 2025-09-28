@@ -1,6 +1,6 @@
 import React, { useContext, useState } from "react";
 import { NavLink } from "react-router-dom";
-import { UserContext } from "../../context/userContext";
+import { UserContext } from "../../context/UserContext";
 import { HiMenuAlt3, HiX } from "react-icons/hi";
 
 const Navbar = () => {
