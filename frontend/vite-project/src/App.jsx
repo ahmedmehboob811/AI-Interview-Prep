@@ -1,7 +1,7 @@
 import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
-import { UserProvider } from './context/userContext.jsx';
+import { UserProvider } from "./context/userContext.jsx";
 
 import LandingPage from "./pages/LandingPage";
 import Login from "./pages/Auth/Login";
